@@ -63,7 +63,7 @@ double remoteLatitude;  //remote postional data for bearing calculation.
 double remoteLongitude;
 bool remoteMatchStatus; //true if partner is facing you.
 
-double headingToPartner;  //rhumb line bearing from local to remote GPS coordinates
+double bearingToPartner;  //rhumb line bearing from local to remote GPS coordinates
 double localHeadingDegrees; //current heading from magnetomer
 
 int matchState = 0; //local and remote match state
@@ -351,34 +351,34 @@ void BearingCalculation()
   double rhumbDIFF = log(abs(tan(rLAT2 / 2 + M_PI / 4) / tan(rLAT1 / 2 + M_PI / 4)));
   double rhumbBRNGrad = atan2(deltaLONG, rhumbDIFF);
   double rhumbBRNGdeg = rhumbBRNGrad * 180.0 / M_PI;
-  headingToPartner = fmod((rhumbBRNGdeg + 360), 360);
-  Serial.print("headingToPartner = ");
-  Serial.println(headingToPartner);
+  bearingToPartner = fmod((rhumbBRNGdeg + 360), 360);
+  Serial.print("bearingToPartner = ");
+  Serial.println(bearingToPartner);
 
 }
 
 void bearingMatch() //compares local heading against calculated bearing
 {
 
-  if (abs(localHeadingDegrees - headingToPartner) >= 20 && remoteMatchStatus == false && matchState != 1)
+  if (abs(localHeadingDegrees - bearingToPartner) >= 20 && remoteMatchStatus == false && matchState != 1)
   {
     Serial.println("No one is facing each other");
     localMatchStatus = false; //local match status for publish to remote partner
     matchState = 1;
   }
-  if (abs(localHeadingDegrees - headingToPartner) >= 20 && remoteMatchStatus == true && matchState != 2)
+  if (abs(localHeadingDegrees - bearingToPartner) >= 20 && remoteMatchStatus == true && matchState != 2)
   {
     Serial.println("Your partner is facing you");
     localMatchStatus = false;
     matchState = 2;
   }
-  if (abs(localHeadingDegrees - headingToPartner) < 20 && remoteMatchStatus == false && matchState != 3)
+  if (abs(localHeadingDegrees - bearingToPartner) < 20 && remoteMatchStatus == false && matchState != 3)
   {
     Serial.println("You are facing your partner");
     localMatchStatus = true;
     matchState = 3;
   }
-  if (abs(localHeadingDegrees - headingToPartner) < 20 && remoteMatchStatus == true && matchState != 4)
+  if (abs(localHeadingDegrees - bearingToPartner) < 20 && remoteMatchStatus == true && matchState != 4)
   {
     Serial.println("You are facing each other!");
     localMatchStatus = true;
@@ -389,11 +389,11 @@ void bearingMatch() //compares local heading against calculated bearing
 
 void blinkRateCALC()  //calculates LED blink rate for local heading to bearing match
 {
-  double blinkCalc = abs(headingToPartner - localHeadingDegrees);
+  double blinkCalc = abs(bearingToPartner - localHeadingDegrees);
   // Correct for when signs are reversed.
   if (blinkCalc > 180)
   {
-    blinkCalc = -blinkCalc + 360;
+    blinkCalc = -blinkCalc + 360; //this is one of my proudest moments in this project. If the absolute difference between local heading and partner bearing is greater than 180(long way around the cirlce), this corrects to make it the short way around the circle.
     Serial.println("......offset");
   }
   Serial.print("blink RATE: ");
